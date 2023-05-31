@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Distance Measurement App</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        #video {
+            display: block;
+            margin: 20px auto;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid black;
+        }
+        #result {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Distance Measurement App</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <button id="calculateBtn">Calculate Distance</button>
+    <div id="result"></div>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const points = [];
+
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const point = { x, y };
+
+            if (points.length < 2) {
+                points.push(point);
+                drawMarker(point);
+            }
+        });
+
+        function drawMarker(point) {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+        }
+
+        function calculateDistance(point1, point2) {
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            const distancePixels = Math.sqrt(dx * dx + dy * dy);
+
+            // Assuming a known conversion factor from pixels to centimeters
+            const conversionFactor = 0.026458;
+            const distanceCm = distancePixels * conversionFactor;
+
+            return distanceCm.toFixed(2);
+        }
+
+        $('#calculateBtn').click(function() {
+            if (points.length === 2) {
+                const distance = calculateDistance(points[0], points[1]);
+                $('#result').text(`Distance: ${distance} cm`);
+            } else {
+                $('#result').text('Please select two points on the canvas.');
+            }
+        });
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(function(error) {
+                console.log('Error accessing camera:', error);
+                alert('Failed to access camera. Please make sure you have granted camera permissions.');
+            });
+    </script>
+</body>
+</html>
